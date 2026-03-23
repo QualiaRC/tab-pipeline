@@ -28,6 +28,8 @@ def test_bootstrap_run(tmp_path, monkeypatch) -> None:
   manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
   assert manifest["input"]["source_name"] == "example.wav"
+  assert manifest["config"]["normalize"]["sample_rate"] == 44100
+  assert manifest["config"]["separation"]["backend"] == "stub"
   assert manifest["stages"][0]["name"] == "ingest"
   assert manifest["stages"][1]["name"] == "normalize"
   assert manifest["stages"][2]["name"] == "separate"

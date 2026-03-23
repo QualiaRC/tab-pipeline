@@ -1,0 +1,11 @@
+pipeline:
+  instrument: bass
+
+normalize:
+  sample_rate: 44100
+  channels: 1
+  codec: pcm_s16le
+
+separation:
+  backend: stub
+  target_stem: bass

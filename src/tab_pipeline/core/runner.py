@@ -2,8 +2,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from tab_pipeline.adapters.stub_separator import StubSeparator
+from tab_pipeline.config import load_config
 from tab_pipeline.core.manifest import write_manifest
 from tab_pipeline.core.paths import RunPaths
+from tab_pipeline.models.config import PipelineConfig
 from tab_pipeline.models.context import RunContext
 from tab_pipeline.models.run import RunManifest
 from tab_pipeline.paths import RUNS_DIR, ensure_directories
@@ -17,7 +19,7 @@ def _build_run_id() -> str:
   return timestamp
 
 
-def _create_run_context() -> RunContext:
+def _create_run_context(config: PipelineConfig) -> RunContext:
   run_id = _build_run_id()
   run_dir = RUNS_DIR / run_id
   run_dir.mkdir(parents=True, exist_ok=False)
@@ -25,24 +27,33 @@ def _create_run_context() -> RunContext:
   return RunContext(
     run_id=run_id,
     paths=RunPaths(run_dir=run_dir),
+    config=config,
   )
 
 
-def bootstrap_run(input_path: Path) -> Path:
+def _build_separator(backend: str):
+  if backend == "stub":
+    return StubSeparator()
+
+  raise ValueError(f"Unsupported separation backend: {backend}")
+
+
+def bootstrap_run(input_path: Path, config_path: Path | None = None) -> Path:
   ensure_directories()
 
-  ctx = _create_run_context()
+  config = load_config(config_path)
+  ctx = _create_run_context(config)
 
   run_input, ingest_stage = ingest_input(input_path)
 
   normalize_stage = normalize_audio(
     input_path=Path(run_input.source_path),
     output_path=ctx.paths.normalized_audio_path,
-    sample_rate=44100,
-    channels=1,
+    sample_rate=ctx.config.normalize.sample_rate,
+    channels=ctx.config.normalize.channels,
   )
 
-  separator = StubSeparator()
+  separator = _build_separator(ctx.config.separation.backend)
 
   separate_stage = separate_bass_stem(
     input_path=ctx.paths.normalized_audio_path,
@@ -53,6 +64,7 @@ def bootstrap_run(input_path: Path) -> Path:
 
   manifest = RunManifest(
     run_id=ctx.run_id,
+    config=ctx.config.model_dump(mode="python"),
     input=run_input,
     stages=[ingest_stage, normalize_stage, separate_stage],
   )
