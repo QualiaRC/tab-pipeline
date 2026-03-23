@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from pathlib import Path
+from uuid import uuid4
 
 from tab_pipeline.adapters.audio_separator_backend import AudioSeparatorBackend
 from tab_pipeline.adapters.stub_separator import StubSeparator
@@ -16,9 +17,9 @@ from tab_pipeline.stages.separate import separate_stems
 
 
 def _build_run_id() -> str:
-  timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H-%M-%SZ")
-  return timestamp
-
+  timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H-%M-%S.%fZ")
+  suffix = uuid4().hex[:8]
+  return f"{timestamp}__{suffix}"
 
 def _create_run_context(config: PipelineConfig) -> RunContext:
   run_id = _build_run_id()
