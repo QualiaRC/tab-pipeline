@@ -11,7 +11,7 @@ def test_bootstrap_run(tmp_path, monkeypatch) -> None:
     wav_file.setnchannels(1)
     wav_file.setsampwidth(2)
     wav_file.setframerate(44100)
-    wav_file.writeframes(b"\x00\x00" * 4410)
+    wav_file.writeframes(b"\\x00\\x00" * 4410)
 
   runs_dir = tmp_path / "runs"
 

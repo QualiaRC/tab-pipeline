@@ -2,6 +2,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from tab_pipeline.core.manifest import write_manifest
+from tab_pipeline.core.paths import RunPaths
+from tab_pipeline.models.context import RunContext
 from tab_pipeline.models.run import RunManifest
 from tab_pipeline.paths import RUNS_DIR, ensure_directories
 from tab_pipeline.stages.ingest import ingest_input
@@ -13,31 +15,37 @@ def _build_run_id() -> str:
   return timestamp
 
 
-def bootstrap_run(input_path: Path) -> Path:
-  ensure_directories()
-
+def _create_run_context() -> RunContext:
   run_id = _build_run_id()
   run_dir = RUNS_DIR / run_id
   run_dir.mkdir(parents=True, exist_ok=False)
 
-  run_input, ingest_stage = ingest_input(input_path)
+  return RunContext(
+    run_id=run_id,
+    paths=RunPaths(run_dir=run_dir),
+  )
 
-  normalized_dir = run_dir / "workspace" / "normalize"
-  normalized_path = normalized_dir / "normalized.wav"
+
+def bootstrap_run(input_path: Path) -> Path:
+  ensure_directories()
+
+  ctx = _create_run_context()
+
+  run_input, ingest_stage = ingest_input(input_path)
 
   normalize_stage = normalize_audio(
     input_path=Path(run_input.source_path),
-    output_path=normalized_path,
+    output_path=ctx.paths.normalized_audio_path,
     sample_rate=44100,
     channels=1,
   )
 
   manifest = RunManifest(
-    run_id=run_id,
+    run_id=ctx.run_id,
     input=run_input,
     stages=[ingest_stage, normalize_stage],
   )
 
-  write_manifest(run_dir / "run.json", manifest)
+  write_manifest(ctx.paths.manifest_path, manifest)
 
-  return run_dir
+  return ctx.paths.run_dir
