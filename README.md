@@ -1,2 +1,18 @@
 # tab-pipeline
-A local Python pipeline for converting song audio into structured intermediate transcription artifacts, beginning with bass-first source separation and note extraction.
+
+Local Python pipeline for staged audio-to-tab transcription workflows.
+
+## Current scope
+
+Early bootstrap only:
+- register a run
+- create a run directory
+- write a run manifest
+
+## Development
+
+```bash
+uv sync --extra dev
+uv run tab-pipeline run path/to/song.wav
+uv run pytest
+```
