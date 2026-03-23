@@ -8,6 +8,7 @@ def test_load_default_config() -> None:
   assert config.normalize.sample_rate == 44100
   assert config.normalize.channels == 1
   assert config.separation.backend == "stub"
+  assert config.separation.requested_stems == ["bass", "guitar"]
 
 
 def test_load_override_config(tmp_path) -> None:
@@ -17,6 +18,10 @@ def test_load_override_config(tmp_path) -> None:
 normalize:
   sample_rate: 48000
   channels: 2
+
+separation:
+  requested_stems:
+    - bass
 '''.strip(),
     encoding="utf-8",
   )
@@ -26,3 +31,4 @@ normalize:
   assert config.normalize.sample_rate == 48000
   assert config.normalize.channels == 2
   assert config.separation.backend == "stub"
+  assert config.separation.requested_stems == ["bass"]

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PipelineSection(BaseModel):
@@ -15,7 +15,9 @@ class NormalizeSection(BaseModel):
 
 class SeparationSection(BaseModel):
   backend: Literal["stub", "audio_separator"] = "stub"
-  target_stem: Literal["bass"] = "bass"
+  requested_stems: list[Literal["bass", "guitar"]] = Field(
+    default_factory=lambda: ["bass", "guitar"]
+  )
   model_filename: str = "htdemucs_6s.yaml"
   model_file_dir: str = "data/models/audio-separator"
 

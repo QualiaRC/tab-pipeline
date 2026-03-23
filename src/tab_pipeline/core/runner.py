@@ -12,7 +12,7 @@ from tab_pipeline.models.run import RunManifest
 from tab_pipeline.paths import ROOT_DIR, RUNS_DIR, ensure_directories
 from tab_pipeline.stages.ingest import ingest_input
 from tab_pipeline.stages.normalize import normalize_audio
-from tab_pipeline.stages.separate import separate_bass_stem
+from tab_pipeline.stages.separate import separate_stems
 
 
 def _build_run_id() -> str:
@@ -69,11 +69,12 @@ def bootstrap_run(input_path: Path, config_path: Path | None = None) -> Path:
 
   separator = _build_separator(ctx)
 
-  separate_stage = separate_bass_stem(
+  separate_stage = separate_stems(
     input_path=ctx.paths.normalized_audio_path,
-    output_path=ctx.paths.bass_stem_path,
+    output_dir=ctx.paths.separate_dir,
+    requested_stems=ctx.config.separation.requested_stems,
     separator_name=separator.name,
-    separate_fn=separator.separate_bass,
+    separate_fn=separator.separate_stems,
   )
 
   manifest = RunManifest(

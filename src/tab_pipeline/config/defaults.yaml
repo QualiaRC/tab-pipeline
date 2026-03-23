@@ -8,6 +8,8 @@ normalize:
 
 separation:
   backend: stub
-  target_stem: bass
+  requested_stems:
+    - bass
+    - guitar
   model_filename: htdemucs_6s.yaml
   model_file_dir: data/models/audio-separator

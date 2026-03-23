@@ -4,18 +4,31 @@ from pathlib import Path
 from tab_pipeline.models.run import StageRecord
 
 
-def separate_bass_stem(
+def separate_stems(
   input_path: Path,
-  output_path: Path,
+  output_dir: Path,
+  requested_stems: list[str],
   separator_name: str,
   separate_fn,
 ) -> StageRecord:
   started_at = datetime.now(UTC)
 
-  output_path.parent.mkdir(parents=True, exist_ok=True)
-  separate_fn(input_path, output_path)
+  output_dir.mkdir(parents=True, exist_ok=True)
+  outputs = separate_fn(input_path, output_dir, requested_stems)
 
-  size_bytes = output_path.stat().st_size
+  details: dict[str, str | int | float | bool | None] = {
+    "separator": separator_name,
+    "requested_stem_count": len(requested_stems),
+  }
+
+  for stem in requested_stems:
+    path = outputs.get(stem)
+    if path is None:
+      raise RuntimeError(f"Separator did not return requested stem: {stem}")
+
+    details[f"{stem}_output_path"] = str(path.resolve())
+    details[f"{stem}_size_bytes"] = path.stat().st_size
+
   finished_at = datetime.now(UTC)
 
   return StageRecord(
@@ -23,10 +36,5 @@ def separate_bass_stem(
     status="completed",
     started_at=started_at,
     finished_at=finished_at,
-    details={
-      "separator": separator_name,
-      "target": "bass",
-      "output_path": str(output_path.resolve()),
-      "size_bytes": size_bytes,
-    },
+    details=details,
   )
